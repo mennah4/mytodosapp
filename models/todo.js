@@ -27,6 +27,10 @@ const todoSchema = new Schema({
         type:Date,
         required:true
     },
+    creator:{
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }
 })
 
 module.exports = mongoose.model('Todo',todoSchema)
