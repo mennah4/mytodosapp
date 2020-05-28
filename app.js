@@ -1,11 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const graphqlHTTP = require("express-graphql");
-const { buildSchema } = require("graphql")
+const { buildSchema } = require("graphql");
+const mongoose = require('mongoose');
+const Todo = require('./models/todo');
 
 const app = express();
 
-const todos = []
+//const todos = []
 app.use(bodyParser.json());
 
 // app.get('/', (req, res, next) => {
@@ -23,7 +25,7 @@ app.use('/graphql',
             author: String!
             status: String!
             creationDate: String!
-            dueDate: String
+            dueDate: String!
         }
 
         input TodoInput{
@@ -32,7 +34,7 @@ app.use('/graphql',
             author: String!
             status: String!
             creationDate: String!
-            dueDate: String
+            dueDate: String!
         }
 
         type RootQuery{
@@ -50,28 +52,48 @@ app.use('/graphql',
     `),
         rootValue: {//resolver functions need to have the same name as the schema
             todos: () => {
-                return todos
+                return Todo.find().then(todos=>{
+                    return todos.map(todo =>{
+                        return {...todo._doc, _id: todo._doc._id.toString()} //translate id to string
+                    });
+
+                }).catch(err =>{
+                    throw err;
+                })
+                //return todos
             },
 
             createTodo: (args) => {
-                const todo = {
-                    _id: Math.random().toString(),
+
+                const todo = new Todo({
                     title: args.todoInput.title,
                     description: args.todoInput.description,
                     author: args.todoInput.author,
                     status: args.todoInput.status,
-                    creationDate: args.todoInput.creationDate,
-                    dueDate: args.todoInput.dueDate,
+                    creationDate: new Date(args.todoInput.creationDate),
+                    dueDate: new Date(args.todoInput.dueDate),
 
-                };
-                //console.log(todo)
-                todos.push(todo);
+                })
+                //todos.push(todo);
 
-                return todo;
+                return todo.save().then(result =>{
+                    console.log(result);
+                    //return result
+                    return {...result._doc,  _id: todo.id}
+                }).catch(err =>{
+                    console.log(err);
+                    throw err;
+                })
+
+                //return todo;
             }
         }, //js object which has all the resolver functions which need to match schema by name
         graphiql: true
 
     }));//where to find the schema or the resolvers whhic defines the endpoint, to wich the quesry will be excuted
-
-app.listen(3000);
+mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-z0nsq.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`
+, {useNewUrlParser: true, useUnifiedTopology: true}).then(() =>{
+    app.listen(3000);
+}).catch(err =>{
+    console.log(err);
+});
