@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const graphqlHTTP = require("express-graphql");
 const mongoose = require('mongoose');
 
-
+const isAuth = require('./middleware/is-auth')
 const graphQlSchema = require('./graphql/schema/index');
 const graphQlResolvers = require('./graphql/resolvers/index')
 const app = express();
@@ -11,7 +11,9 @@ const app = express();
 //const todos = []
 app.use(bodyParser.json());
 
-
+//general app.use to check if the incoming requests r going tp be allowed by the middleware function
+//if we pass it to th end oint all api will be restricted and checked with it, since we have one endpoint for the whole api
+app.use(isAuth);
 
 // app.get('/', (req, res, next) => {
 //     res.send('hello world');
