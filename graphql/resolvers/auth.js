@@ -13,7 +13,7 @@ module.exports = {//resolver functions need to have the same name as the schema
             if (existingUser) {
                 throw new Error("User existis already")
             }
-            const hashedPassword = bcrypt.hash(args.userInput.password, 12)
+            const hashedPassword = await bcrypt.hash(args.userInput.password, 12)
 
             const user = new User({
                 email: args.userInput.email,
